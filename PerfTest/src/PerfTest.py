@@ -18,7 +18,7 @@ class PerfTest:
     in_queue_lt, out_queue_lt = [], []
     urls_fname_lt, diff_fname_lt, result_fname_lt = [], [], []
     # urls_fp_lt存放请求url文件，diff_fp_lt存放响应结果文件, result_fp_lt存放统计结果文件
-    urls_fp_lt, diff_fp_lt, result_fp_lt = [], []
+    urls_fp_lt, diff_fp_lt, result_fp_lt = [], [], []
     sampler_metric_lt = []
 
     def __init__(self, argv):
@@ -31,7 +31,7 @@ class PerfTest:
         if self.settings['single_node'] in ["True", "true", "Yes", "yes", "1"]:
             self.settings['ip_port'] = self.settings['ip_port'].strip(" \n\r\t").split(Constants.SEPARATOR)[0].strip(
                 " \n\r\t")
-        self.construct()
+        self.prepare_enviroment()
         # http load test
         http_load_threads = []
         if self.settings['stress'] in ["True", "true", "Yes", "yes", "1"]:
@@ -61,7 +61,7 @@ class PerfTest:
             self.diff_test()
         self.logger.info("test end!")
 
-    def construct(self):
+    def prepare_enviroment(self):
         server_nums = self.get_server_nums()
         self.ip_port_lt = self.settings['ip_port'].strip(" \n\r\t").split(Constants.SEPARATOR)[0:server_nums]
         # init result,diff,url,queue list
@@ -154,5 +154,7 @@ class PerfTest:
             if os.path.exists(diff_fname):
                 cmd = "sort -nr %s -o %s" % (diff_fname, diff_fname + ".sort")
                 self.logger.info('execute cmd: "%s"' % cmd)
-                subprocess.call(cmd)
+                popen = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                for line in popen.stdout.readlines():
+                    self.logger.info(str(line).strip('\r\n'))
         self.logger.info("diff test end!!！")
